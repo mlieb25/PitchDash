@@ -4,15 +4,7 @@ Main entry point for the Streamlit application
 """
 import streamlit as st
 import pandas as pd
-import sys
 from pathlib import Path
-
-# Add utils to path
-current_dir = Path(__file__).parent
-if str(current_dir) not in sys.path:
-    sys.path.insert(0, str(current_dir))
-
-from utils.calculations import format_currency, format_percentage, format_multiple
 import plotly.graph_objects as go
 
 # Page configuration
@@ -23,7 +15,31 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better styling
+# ============================================================================
+# HELPER FUNCTIONS - DEFINED INLINE (NO EXTERNAL IMPORTS)
+# ============================================================================
+
+def format_currency(value, decimals=0):
+    """Format value as currency"""
+    if abs(value) >= 1_000_000:
+        return f"${value/1_000_000:.{decimals}f}M"
+    elif abs(value) >= 1_000:
+        return f"${value/1_000:.{decimals}f}K"
+    else:
+        return f"${value:,.{decimals}f}"
+
+def format_percentage(value, decimals=1):
+    """Format value as percentage"""
+    return f"{value:.{decimals}f}%"
+
+def format_multiple(value, decimals=2):
+    """Format value as multiple (e.g., 4.5x)"""
+    return f"{value:.{decimals}f}x"
+
+# ============================================================================
+# CUSTOM CSS
+# ============================================================================
+
 st.markdown("""
 <style>
     .main-header {
@@ -55,24 +71,43 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Load data
+# ============================================================================
+# DATA LOADING
+# ============================================================================
+
 @st.cache_data
 def load_data():
-    data_path = Path(__file__).parent / "data"
+    """Load all CSV data files"""
+    try:
+        data_path = Path(__file__).parent / "data"
 
-    roi_summary = pd.read_csv(data_path / "investor_roi_summary.csv")
-    financials = pd.read_csv(data_path / "financial_projections_2015_2030.csv")
-    funding_rounds = pd.read_csv(data_path / "funding_rounds_overview.csv")
+        roi_summary = pd.read_csv(data_path / "investor_roi_summary.csv")
+        financials = pd.read_csv(data_path / "financial_projections_2015_2030.csv")
+        funding_rounds = pd.read_csv(data_path / "funding_rounds_overview.csv")
 
-    return roi_summary, financials, funding_rounds
+        return roi_summary, financials, funding_rounds
+    except FileNotFoundError as e:
+        st.error(f"⚠️ Data file not found: {e}")
+        st.info("Please ensure all CSV files are in the 'data' directory.")
+        st.stop()
+    except Exception as e:
+        st.error(f"⚠️ Error loading data: {e}")
+        st.stop()
 
+# Load data
 roi_summary, financials, funding_rounds = load_data()
 
-# Header
+# ============================================================================
+# HEADER
+# ============================================================================
+
 st.markdown('<h1 class="main-header">🏢 AI Datacenter Vancouver</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-header">Interactive Investor Pitch Dashboard - Series B Opportunity</p>', unsafe_allow_html=True)
 
-# Executive Summary
+# ============================================================================
+# EXECUTIVE SUMMARY
+# ============================================================================
+
 st.markdown("---")
 st.header("Executive Summary")
 
@@ -107,7 +142,10 @@ with col4:
         delta="2015-2024"
     )
 
-# Key Highlights
+# ============================================================================
+# KEY HIGHLIGHTS
+# ============================================================================
+
 st.markdown("---")
 st.header("Why Invest Now?")
 
@@ -141,7 +179,10 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
 
-# Company Overview
+# ============================================================================
+# COMPANY OVERVIEW
+# ============================================================================
+
 st.markdown("---")
 st.header("Company Overview")
 
@@ -173,7 +214,10 @@ with col3:
     - 115 Employees
     """)
 
-# Past Investor Success
+# ============================================================================
+# PAST INVESTOR SUCCESS
+# ============================================================================
+
 st.markdown("---")
 st.header("Past Investor Returns")
 
@@ -219,7 +263,10 @@ with col3:
     </div>
     """, unsafe_allow_html=True)
 
-# Navigation Guide
+# ============================================================================
+# NAVIGATION GUIDE
+# ============================================================================
+
 st.markdown("---")
 st.header("📱 Navigate the Dashboard")
 
@@ -232,6 +279,9 @@ Use the sidebar to explore different sections:
 - **📑 Company Details**: Operational metrics and business fundamentals
 """)
 
-# Footer
+# ============================================================================
+# FOOTER
+# ============================================================================
+
 st.markdown("---")
 st.caption("AI Datacenter Vancouver | Confidential Investor Materials | 2025")
