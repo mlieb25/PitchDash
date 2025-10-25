@@ -8,7 +8,9 @@ import sys
 from pathlib import Path
 
 # Add utils to path
-sys.path.append(str(Path(__file__).parent))
+current_dir = Path(__file__).parent
+if str(current_dir) not in sys.path:
+    sys.path.insert(0, str(current_dir))
 
 from utils.calculations import format_currency, format_percentage, format_multiple
 import plotly.graph_objects as go
